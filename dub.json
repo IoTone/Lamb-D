@@ -1,0 +1,9 @@
+{
+	"description": "An AWS Lambda Layer for Dlang.",
+	"license": "BSD-3-Clause",
+	"authors": [
+		"truedat101"
+	],
+	"copyright": "Copyright 2019, IoTone, Inc.",
+	"name": "lamb-d"
+}

@@ -127,6 +127,15 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
     context.clientContext.object = null;
   }
 
+  // Might want to se this: putEnv("_X_AMZN_TRACE_ID", res.headers.getOrDefault("Lambda-Runtime-Trace-Id"))
+
+  //
+  // Invoke the handler
+  //
+
+  //
+  // Then return the response for the request id
+  //
   return null;
 }
 

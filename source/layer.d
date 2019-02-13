@@ -44,11 +44,11 @@ struct LambdaContext {
   string functionName;
   string invokedFunctionArn;
   string functionVersion;
-  int memoryLimitInMB;
+  int memoryLimitInMB;          /* max limit is currently 2GB? */
   string logGroupName;
   string logStreamName;
   string awsRequestId;
-  Duration deadline;
+  uint deadline;            /* Max MS is 60 (sec) * 1000 (ms) * 15min = 900000 */
   JSONValue identity;
   JSONValue clientContext;
 }
@@ -99,6 +99,37 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
     awsLambdaRuntimeAPI = environment[AWS_LAMBDA_RUNTIME_API];
   }
 
-  auto resp = get(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
+  auto http = HTTP(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
+  // auto resp = get(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
+  int responseCode;
+  http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
+  // http.onReceiveHeader = (in char[] key, in char[] value) { writeln(key, " = ", value); };
+
+  if (responseCode != 200) {
+    throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI, reason: statusCode = " ~ to!string(responseCode));
+  }
+  //attach onreceive callback as well
+  http.perform();
+
+  context.awsRequestId =  http.responseHeaders["Lambda-Runtime-Aws-Request-Id"];
+  context.invokedFunctionArn =  http.responseHeaders["Lambda-Runtime-Invoked-Function-Arn"];
+  context.deadline = to!uint(http.responseHeaders["Lambda-Runtime-Deadline-Ms"]);
+
+  if (http.responseHeaders["Lambda-Runtime-Cognito-Identity"] != null) {
+    context.identity = parseJSON(http.responseHeaders["Lambda-Runtime-Cognito-Identity"]);
+  } else {
+    context.identity.object = null;
+  }
+
+  if (http.responseHeaders["Lambda-Runtime-Client-Context"] != null) {
+    context.clientContext = parseJSON(http.responseHeaders["Lambda-Runtime-Client-Context"]);
+  } else {
+    context.clientContext.object = null;
+  }
+
   return null;
+}
+
+class LambDException : Exception {
+  this(string msg) { super(msg); }
 }

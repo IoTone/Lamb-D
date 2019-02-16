@@ -72,6 +72,7 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   LambdaContext context;
   string awsLambdaRuntimeAPI;
   JSONValue event;
+  JSONValue result;
 
   /**
    * Set data from environment
@@ -137,7 +138,7 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   //
   // Invoke the handler
   //
-  // JSONValue result = handler()
+  result = handler(event, context);
 
   //
   // Then return the response for the request id

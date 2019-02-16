@@ -54,7 +54,7 @@ struct LambdaContext {
 }
 
 static alias void function(int err, ref ubyte[] data) CallbackFunc;
-static alias void function(JSONValue evt, LambdaContext ctx) HandlerFunc;
+static alias JSONValue function(JSONValue evt, LambdaContext ctx) HandlerFunc;
  
 
 
@@ -71,6 +71,7 @@ static alias void function(JSONValue evt, LambdaContext ctx) HandlerFunc;
 JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   LambdaContext context;
   string awsLambdaRuntimeAPI;
+  JSONValue event;
 
   /**
    * Set data from environment
@@ -104,6 +105,10 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   int responseCode;
   http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
   // http.onReceiveHeader = (in char[] key, in char[] value) { writeln(key, " = ", value); };
+  http.onReceive = (ubyte[] data) {
+    event = parseJSON(to!(const(char)[])(data));
+    return data.length; 
+  };
 
   if (responseCode != 200) {
     throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI, reason: statusCode = " ~ to!string(responseCode));
@@ -132,6 +137,7 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   //
   // Invoke the handler
   //
+  // JSONValue result = handler()
 
   //
   // Then return the response for the request id

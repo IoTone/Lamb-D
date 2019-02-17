@@ -14,6 +14,7 @@ import std.conv;
 import std.socket;
 import std.regex;
 import std.process;
+import std.format;
 
 // import core.stdc.stdlib;
 
@@ -53,7 +54,7 @@ struct LambdaContext {
   JSONValue clientContext;
 }
 
-static alias void function(int err, ref ubyte[] data) CallbackFunc;
+// static alias void function(int err, ref ubyte[] data) CallbackFunc;
 static alias JSONValue function(JSONValue evt, LambdaContext ctx) HandlerFunc;
  
 
@@ -68,7 +69,7 @@ static alias JSONValue function(JSONValue evt, LambdaContext ctx) HandlerFunc;
  * Post the handler response
  *
  */
-JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
+void runHandler(HandlerFunc handler) {
   LambdaContext context;
   string awsLambdaRuntimeAPI;
   JSONValue event;
@@ -102,10 +103,8 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   }
 
   auto http = HTTP(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
-  // auto resp = get(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
   int responseCode;
   http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
-  // http.onReceiveHeader = (in char[] key, in char[] value) { writeln(key, " = ", value); };
   http.onReceive = (ubyte[] data) {
     event = parseJSON(to!(const(char)[])(data));
     return data.length; 
@@ -114,7 +113,6 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   if (responseCode != 200) {
     throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI, reason: statusCode = " ~ to!string(responseCode));
   }
-  //attach onreceive callback as well
   http.perform();
 
   context.awsRequestId =  http.responseHeaders["Lambda-Runtime-Aws-Request-Id"];
@@ -143,7 +141,18 @@ JSONValue* runHandler(HandlerFunc handler, CallbackFunc cb) {
   //
   // Then return the response for the request id
   //
-  return null;
+  http = HTTP(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
+  http.postData = [result.toString];
+  http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
+
+
+  if (responseCode != 200) {
+    throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI Invocation Response, reason: statusCode = " ~ to!string(responseCode));
+  }
+
+  http.perform();
+
+  // Nothing to return
 }
 
 class LambDException : Exception {

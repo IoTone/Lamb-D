@@ -6,3 +6,4 @@
 
 module lambd;
 public import lambd.layer;
+public import lambd.bootstrap;

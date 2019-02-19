@@ -18,6 +18,9 @@ import lambd.layer;
     // - some cool crypto stuff
     // - break the Internet
 
+    //
+    // YOU SHOULD DELETE EVERYTHING BELOW HERE AND REPLACE WITH YOUR OWN LAMBDA
+    //
     // For this quick example, we will simply generate UUIDs
     // event should contain:
     // - (optional) inputdata: [] array, with input data strings
@@ -32,6 +35,7 @@ import lambd.layer;
         // TODO: Implement
     } else if (const(JSONValue)* count = "count" in evt) {
         uuidcount = to!int(count.integer);
+        writeln("Generate ", uuidcount, " UUIDs");
     } else {
         // assume count = 1;
         writeln("Performing default UUID gen count = 1");

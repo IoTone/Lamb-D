@@ -20,5 +20,5 @@ chmod 755 bin/lamb-d
 # Presumably we might need to generate something in this template
 # but for now just copy it
 cp bootstrap_tpl.sh bootstrap
-chmod 755 boostrap
+chmod 755 bootstrap
 zip -yr lambda.zip bootstrap lamb-d bin lib

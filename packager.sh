@@ -21,4 +21,4 @@ chmod 755 bin/lamb-d
 # but for now just copy it
 cp bootstrap_tpl.sh bootstrap
 chmod 755 bootstrap
-zip -yr lambda.zip bootstrap lamb-d bin lib
+zip -yr lambda.zip bootstrap bin lib

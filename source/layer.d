@@ -54,6 +54,27 @@ struct LambdaContext {
   JSONValue clientContext;
 }
 
+unittest {
+  auto myctx = LambdaContext ("myfunc",
+						"somefakearn",
+						"1.0.0",
+						512, /* mb */
+						"someloggroupname",
+						"somelogstreamname",
+						"somefakeawsrequestID",
+						3000, /* only run for 3000ms */
+						parseJSON("{}"), /* Fill in with an AWS identity JSON */
+						parseJSON("{}") /* Fill in with some AWS client context */
+	);
+  assert(myctx.awsRequestId == "somefakeawsrequestID");
+  assert(myctx.clientContext == parseJSON("{}"));
+  assert(myctx.deadline == 3000);
+  assert(myctx.memoryLimitInMB == 512);
+  assert(myctx.logGroupName == "someloggroupname");
+  assert(myctx.logStreamName == "somelogstreamname");
+  assert(myctx.identity == parseJSON("{}"));
+}
+
 // static alias void function(int err, ref ubyte[] data) CallbackFunc;
 static alias JSONValue function(JSONValue evt, LambdaContext ctx) HandlerFunc;
  
@@ -103,55 +124,63 @@ void runHandler(HandlerFunc handler) {
   }
 
   auto http = HTTP(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
-  int responseCode;
-  http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
-  http.onReceive = (ubyte[] data) {
-    event = parseJSON(to!(const(char)[])(data));
-    return data.length; 
-  };
 
-  if (responseCode != 200) {
-    throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI, reason: statusCode = " ~ to!string(responseCode));
+  while(true) {
+    int responseCode;
+    http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
+    http.onReceive = (ubyte[] data) {
+      event = parseJSON(to!(const(char)[])(data));
+      return data.length; 
+    };
+
+    http.perform();
+
+    if (responseCode != 200) {
+      throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI, reason: statusCode = " ~ to!string(responseCode) ~ 
+      "details: awsLambdaRuntimeAPI: " ~ awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT ~ " calling function name: " ~ context.functionName);
+    }
+    
+
+    if ("Lambda-Runtime-Aws-Request-Id" in http.responseHeaders) {
+      context.awsRequestId =  http.responseHeaders["Lambda-Runtime-Aws-Request-Id"];
+    }
+    context.invokedFunctionArn =  http.responseHeaders["Lambda-Runtime-Invoked-Function-Arn"];
+    context.deadline = to!uint(http.responseHeaders["Lambda-Runtime-Deadline-Ms"]);
+
+    if (http.responseHeaders["Lambda-Runtime-Cognito-Identity"] != null) {
+      context.identity = parseJSON(http.responseHeaders["Lambda-Runtime-Cognito-Identity"]);
+    } else {
+      context.identity.object = null;
+    }
+
+    if (http.responseHeaders["Lambda-Runtime-Client-Context"] != null) {
+      context.clientContext = parseJSON(http.responseHeaders["Lambda-Runtime-Client-Context"]);
+    } else {
+      context.clientContext.object = null;
+    }
+
+    // Might want to se this: putEnv("_X_AMZN_TRACE_ID", res.headers.getOrDefault("Lambda-Runtime-Trace-Id"))
+
+    //
+    // Invoke the handler
+    //
+    result = handler(event, context);
+
+    //
+    // Then return the response for the request id
+    //
+    http = HTTP(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
+    http.postData = [result.toString];
+    http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
+
+
+    http.perform();
+    if (responseCode != 200) {
+      throw new LambDException("Failure to post response AwsLambdaRuntimeAPI Invocation Response, reason: statusCode = " ~ to!string(responseCode));
+    }
+
+    
   }
-  http.perform();
-
-  context.awsRequestId =  http.responseHeaders["Lambda-Runtime-Aws-Request-Id"];
-  context.invokedFunctionArn =  http.responseHeaders["Lambda-Runtime-Invoked-Function-Arn"];
-  context.deadline = to!uint(http.responseHeaders["Lambda-Runtime-Deadline-Ms"]);
-
-  if (http.responseHeaders["Lambda-Runtime-Cognito-Identity"] != null) {
-    context.identity = parseJSON(http.responseHeaders["Lambda-Runtime-Cognito-Identity"]);
-  } else {
-    context.identity.object = null;
-  }
-
-  if (http.responseHeaders["Lambda-Runtime-Client-Context"] != null) {
-    context.clientContext = parseJSON(http.responseHeaders["Lambda-Runtime-Client-Context"]);
-  } else {
-    context.clientContext.object = null;
-  }
-
-  // Might want to se this: putEnv("_X_AMZN_TRACE_ID", res.headers.getOrDefault("Lambda-Runtime-Trace-Id"))
-
-  //
-  // Invoke the handler
-  //
-  result = handler(event, context);
-
-  //
-  // Then return the response for the request id
-  //
-  http = HTTP(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
-  http.postData = [result.toString];
-  http.onReceiveStatusLine = (HTTP.StatusLine status){ responseCode = status.code; };
-
-
-  if (responseCode != 200) {
-    throw new LambDException("Failure to invoke AwsLambdaRuntimeAPI Invocation Response, reason: statusCode = " ~ to!string(responseCode));
-  }
-
-  http.perform();
-
   // Nothing to return
 }
 

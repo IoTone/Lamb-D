@@ -7,7 +7,7 @@ module lambd.layer;
 
 import std.json;
 import std.string;
-import std.net.curl;
+// import std.net.curl;
 import core.time;
 import std.stdio;
 import std.conv;
@@ -123,6 +123,7 @@ void runHandler(HandlerFunc handler) {
     awsLambdaRuntimeAPI = environment[AWS_LAMBDA_RUNTIME_API];
   }
 
+/*
   auto http = HTTP(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
 
   while(true) {
@@ -185,6 +186,7 @@ void runHandler(HandlerFunc handler) {
 
     
   }
+  */
   // Nothing to return
 }
 

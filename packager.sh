@@ -10,8 +10,9 @@ cp /lib/x86_64-linux-gnu/librt.so.1 .
 cp /lib/x86_64-linux-gnu/libm.so.6 .
 cp /lib/x86_64-linux-gnu/libpthread.so.0 .
 cp /lib/x86_64-linux-gnu/libdl.so.2 .
-cd ..
+cp ../openssl-1.1.0l/*.a .
 
+cd ..
 # Copy the binary into bin
 mkdir -p bin
 cp lamb-d bin

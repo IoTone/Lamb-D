@@ -1,16 +1,18 @@
 {
-	"description": "An AWS Lambda Layer for Dlang.",
-	"license": "BSD-3-Clause",
 	"authors": [
 		"truedat101"
 	],
 	"copyright": "Copyright 2019, IoTone, Inc.",
-	"name": "lamb-d",
+	"dependencies": {
+		"openssl": "~>2.0.1"
+	},
+	"description": "An AWS Lambda Layer for Dlang.",
+	"dflags": [""],
 	"lflags": [
-		"-lssl","-lcrypto"
+		"-L./lib",
+		"-lssl",
+		"-lcrypto"
 	],
-	"dflags": [
-		"-static"
-	],
-	"platform": "posix"
+	"license": "BSD-3-Clause",
+	"name": "lamb-d"
 }

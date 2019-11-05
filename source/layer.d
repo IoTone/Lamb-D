@@ -98,6 +98,7 @@ void runHandler(HandlerFunc handler) {
   JSONValue event;
   JSONValue result;
 
+  writeln("å ø ∑ 😦 runHandler()");
   /**
    * Set data from environment
    */
@@ -125,10 +126,11 @@ void runHandler(HandlerFunc handler) {
     awsLambdaRuntimeAPI = environment[AWS_LAMBDA_RUNTIME_API];
   }
 
-  auto uriruntime_next = Uri(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
-  auto uriruntime_resp = Uri(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE));
+  
 
   while (true) {
+    auto uriruntime_next = Uri(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
+  
     auto req = new HttpRequest(uriruntime_next, HttpVerb.GET);
     auto resp = req.waitForCompletion();
 
@@ -138,6 +140,7 @@ void runHandler(HandlerFunc handler) {
     }
 
     // TODO: Handle exception possibility here
+    writeln("resp.contentText:" ~ resp.contentText);
     event = parseJSON(to!(const(char)[])(resp.content));
 
     // TODO: Clean this env initilization into a loop that iterates over an array of the headers we need to load
@@ -175,6 +178,7 @@ void runHandler(HandlerFunc handler) {
     // Then return the response for the request id
     //
     // XXX Fix all of these calls to grab data from callbacks
+    auto uriruntime_resp = Uri(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
     req = new HttpRequest(uriruntime_resp, HttpVerb.POST);
     resp = req.waitForCompletion();
 

@@ -146,8 +146,7 @@ void runHandler(HandlerFunc handler) {
     writeln("resp.contentText:" ~ resp.contentText);
 
     if (resp.content.length > 0) {
-      event = parseJSON(to!(const(char)[])(resp.content));
-      writeln("JSONValue is " ~ event.type());
+      event = parseJSON(cast(string)resp.content);
       writeln("event is:" ~ event.toPrettyString);
     } else {
       throw new LambDException("Failure to receive context back AwsLambdaRuntimeAPI, reason: statusCode = " ~ resp.contentText ~ 
@@ -190,6 +189,8 @@ void runHandler(HandlerFunc handler) {
     // XXX Fix all of these calls to grab data from callbacks
     auto uriruntime_resp = Uri("http://" ~ awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
     req = new HttpRequest(uriruntime_resp, HttpVerb.POST);
+    req.requestParameters.bodyData = cast(ubyte[])result.toPrettyString;
+		req.requestParameters.contentType = "application/json";
     req.perform();
     resp = req.waitForCompletion();
 
@@ -197,7 +198,7 @@ void runHandler(HandlerFunc handler) {
       throw new LambDException("Failure to post response AwsLambdaRuntimeAPI Invocation Response, reason: statusCode = " ~ resp.codeText);
     }
 
-    return;
+    // return;
   }
 
 }

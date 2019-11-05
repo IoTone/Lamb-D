@@ -132,6 +132,7 @@ void runHandler(HandlerFunc handler) {
     auto uriruntime_next = Uri(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
   
     auto req = new HttpRequest(uriruntime_next, HttpVerb.GET);
+    req.perform();
     auto resp = req.waitForCompletion();
 
     if (resp.code != 200) {
@@ -141,8 +142,13 @@ void runHandler(HandlerFunc handler) {
 
     // TODO: Handle exception possibility here
     writeln("resp.contentText:" ~ resp.contentText);
-    event = parseJSON(to!(const(char)[])(resp.content));
 
+    if (resp.content.length > 0) {
+      event = parseJSON(to!(const(char)[])(resp.content));
+    } else {
+      throw new LambDException("Failure to receive context back AwsLambdaRuntimeAPI, reason: statusCode = " ~ resp.contentText ~ 
+        "details: awsLambdaRuntimeAPI: " ~ awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT ~ " calling function name: " ~ context.functionName);
+    }
     // TODO: Clean this env initilization into a loop that iterates over an array of the headers we need to load
     if ("Lambda-Runtime-Aws-Request-Id" in resp.headersHash) {
       context.awsRequestId = resp.headersHash["Lambda-Runtime-Aws-Request-Id"];
@@ -180,6 +186,7 @@ void runHandler(HandlerFunc handler) {
     // XXX Fix all of these calls to grab data from callbacks
     auto uriruntime_resp = Uri(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
     req = new HttpRequest(uriruntime_resp, HttpVerb.POST);
+    req.perform();
     resp = req.waitForCompletion();
 
     if (resp.code != 202) {  // Should this be 202 or 200?

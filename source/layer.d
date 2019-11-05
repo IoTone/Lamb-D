@@ -147,6 +147,8 @@ void runHandler(HandlerFunc handler) {
 
     if (resp.content.length > 0) {
       event = parseJSON(to!(const(char)[])(resp.content));
+      writeln("JSONValue is " ~ event.type());
+      writeln("event is:" ~ event.toPrettyString);
     } else {
       throw new LambDException("Failure to receive context back AwsLambdaRuntimeAPI, reason: statusCode = " ~ resp.contentText ~ 
         "details: awsLambdaRuntimeAPI: " ~ awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT ~ " calling function name: " ~ context.functionName);

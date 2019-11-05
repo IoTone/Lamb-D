@@ -30,7 +30,7 @@ import lambd.layer;
     // results: [] array of UUIDs as strings
     import std.uuid;
     int uuidcount = 1;
-    JSONValue* uuidinputdata;
+    // JSONValue* uuidinputdata;
     if (const(JSONValue)* inputdata= "inputdata" in evt) {
         // TODO: Implement
     } else if (const(JSONValue)* count = "count" in evt) {

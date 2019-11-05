@@ -14,6 +14,7 @@ import std.socket;
 import std.regex;
 import std.process;
 import std.format;
+import core.stdc.stdint;
 
 // External libs
 import arsd.http2;
@@ -51,7 +52,7 @@ struct LambdaContext {
   string logGroupName;
   string logStreamName;
   string awsRequestId;
-  uint deadline;            /* Max MS is 60 (sec) * 1000 (ms) * 15min = 900000 */
+  uint64_t deadline;            /* Max MS is 60 (sec) * 1000 (ms) * 15min = 900000 */
   JSONValue identity;
   JSONValue clientContext;
 }
@@ -129,8 +130,9 @@ void runHandler(HandlerFunc handler) {
   
 
   while (true) {
-    auto uriruntime_next = Uri(awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT);
-  
+    // https://docs.aws.amazon.com/lambda/latest/dg/runtimes-api.html
+    auto uriruntime_next = Uri("http://" ~ awsLambdaRuntimeAPI ~ AWS_LAMBDA_RUNTIME_INVOCATION_NEXT); // HTTP and not HTTPS?
+    writeln("Invoking uri:" ~ uriruntime_next);
     auto req = new HttpRequest(uriruntime_next, HttpVerb.GET);
     req.perform();
     auto resp = req.waitForCompletion();
@@ -159,16 +161,16 @@ void runHandler(HandlerFunc handler) {
     }
 
     if ("Lambda-Runtime-Deadline-Ms" in resp.headersHash) {
-      context.deadline = to!uint(resp.headersHash["Lambda-Runtime-Deadline-Ms"]);
+      context.deadline = to!uint64_t(resp.headersHash["Lambda-Runtime-Deadline-Ms"]);
     }
 
-    if (resp.headersHash["Lambda-Runtime-Cognito-Identity"] != null) {
+    if ("Lambda-Runtime-Cognito-Identity" in resp.headersHash) {
       context.identity = parseJSON(resp.headersHash["Lambda-Runtime-Cognito-Identity"]);
     } else {
       context.identity.object = null;
     }
 
-    if (resp.headersHash["Lambda-Runtime-Client-Context"] != null) {
+    if ("Lambda-Runtime-Client-Context" in resp.headersHash) {
       context.clientContext = parseJSON(resp.headersHash["Lambda-Runtime-Client-Context"]);
     } else {
       context.clientContext.object = null;
@@ -184,7 +186,7 @@ void runHandler(HandlerFunc handler) {
     // Then return the response for the request id
     //
     // XXX Fix all of these calls to grab data from callbacks
-    auto uriruntime_resp = Uri(awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
+    auto uriruntime_resp = Uri("http://" ~ awsLambdaRuntimeAPI ~ format(AWS_LAMBDA_RUNTIME_INVOCATION_RESPONSE, context.awsRequestId));
     req = new HttpRequest(uriruntime_resp, HttpVerb.POST);
     req.perform();
     resp = req.waitForCompletion();

@@ -7,9 +7,12 @@
 		"openssl": "~>2.0.1"
 	},
 	"description": "An AWS Lambda Layer for Dlang.",
-	"dflags": [""],
+	"dflags": ["-static"],
+	"sourcePaths": ["source"],
+	"sourceFiles": [
+	],
 	"lflags": [
-		"-L./lib",
+		"-Lopenssl-1.1.0l",
 		"-lssl",
 		"-lcrypto"
 	],

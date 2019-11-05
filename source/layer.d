@@ -7,7 +7,6 @@ module lambd.layer;
 
 import std.json;
 import std.string;
-// import std.net.curl;
 import core.time;
 import std.stdio;
 import std.conv;
@@ -15,6 +14,9 @@ import std.socket;
 import std.regex;
 import std.process;
 import std.format;
+
+// External libs
+import arsd.http2;
 
 // import core.stdc.stdlib;
 

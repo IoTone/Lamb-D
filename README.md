@@ -4,7 +4,7 @@ An AWS Lambda Runtime for Dlang
 
 ## Building
 
-- Install the dependences: sh ./setup_external_deps.sh
+- Install the dependences: sh ./setup__external__deps.sh
 - Add your lambda implementation into bootstrap.d
 - type: dub --compiler=gdc or dub --compiler=ldc2
 
@@ -12,7 +12,7 @@ An AWS Lambda Runtime for Dlang
 
 For verification of your Lamb-D in a local serverless style, try:
 
-- sh ./setenv_fake_lambdaenv.sh
+- sh ./setenv__fake__lambdaenv.sh
 - dub test
 
 TODO: Add some better testing facilities.

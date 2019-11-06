@@ -1,6 +1,6 @@
 # Overview
 
-An AWS Lambda Layer for Dlang
+An AWS Lambda Runtime for Dlang
 
 ## Building
 
@@ -21,4 +21,9 @@ TODO: Add some better testing facilities.
 
 - Create an AWS Lambda with a Custom Runtime
 - Run the packager: sh ./packager.sh
-- Copy your lambda.zip into your AWS Lambda instance on AWS.  TODO: Add some more details on the setup.  
+- Copy your lambda.zip into your AWS Lambda instance on AWS.  TODO: Add some more details on the setup.
+
+## Inspirations
+
+- Cramda, a Crystal language based custom runtime https://github.com/lambci/crambda
+- Nim AWS Lambda custom runtime https://github.com/lambci/awslambda.nim

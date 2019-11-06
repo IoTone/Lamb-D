@@ -6,7 +6,7 @@
 	"dependencies": {
 		"openssl": "~>2.0.1"
 	},
-	"description": "An AWS Lambda Layer for Dlang.",
+	"description": "An AWS Lambda custom runtime for Dlang, written in D.",
 	"dflags": ["-static"],
 	"sourcePaths": ["source"],
 	"sourceFiles": [

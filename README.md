@@ -1,6 +1,6 @@
 # Overview
 
-An AWS Lambda Runtime for Dlang
+An AWS Lambda Runtime for Dlang, written from scratch in D.
 
 ## Building
 
@@ -22,6 +22,10 @@ TODO: Add some better testing facilities.
 - Create an AWS Lambda with a Custom Runtime
 - Run the packager: sh ./packager.sh
 - Copy your lambda.zip into your AWS Lambda instance on AWS.  TODO: Add some more details on the setup.
+
+## Attributions
+
+- @adamdrupe http2 from arsd: https://github.com/adamdruppe/arsd/blob/master/http2.d
 
 ## Inspirations
 
